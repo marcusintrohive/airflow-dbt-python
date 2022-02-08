@@ -5,6 +5,7 @@ Intended to be used only when running Airflow with a LocalExceutor.
 from __future__ import annotations
 
 import shutil
+import sys
 from functools import partial
 from pathlib import Path
 from zipfile import ZipFile
@@ -52,7 +53,10 @@ class DbtLocalFsBackend(DbtBackend):
 
             zip_destination.unlink()
         else:
-            shutil.copytree(source, destination, dirs_exist_ok=True)
+            if sys.version_info.major == 3 and sys.version_info.minor < 8:
+                shutil.copytree(source, destination)
+            else:
+                shutil.copytree(source, destination, dirs_exist_ok=True)
 
         return Path(destination)
 
@@ -107,6 +111,9 @@ class DbtLocalFsBackend(DbtBackend):
 
             copy_function = partial(self.push_one, replace=replace)
 
-            shutil.copytree(
-                source, destination, copy_function=copy_function, dirs_exist_ok=True
-            )
+            if sys.version_info.major == 3 and sys.version_info.minor < 8:
+                shutil.copytree(source, destination, copy_function=copy_function)
+            else:
+                shutil.copytree(
+                    source, destination, copy_function=copy_function, dirs_exist_ok=True
+                )
